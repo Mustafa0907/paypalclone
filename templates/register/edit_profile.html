@@ -1,0 +1,47 @@
+{#{% extends 'base.html' %}#}
+{##}
+{#{% block content %}#}
+{#    <div class="container">#}
+{#        <h2>Edit Profile</h2>#}
+{#        <form method="post">#}
+{#            {% csrf_token %}#}
+{#            {{ form.as_p }}#}
+{#            <button type="submit" class="btn btn-primary">Update</button>#}
+{#        </form>#}
+{#    </div>#}
+{#{% endblock %}#}
+
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2>Edit Profile</h2>
+        <form method="post" action="{% url 'edit_profile' %}">
+            {% csrf_token %}
+            {{ profile_form.non_field_errors }}
+            {{ profile_form.as_p }}
+            <button type="submit" name="update_profile" class="btn btn-primary">Update Profile</button>
+        </form>
+
+        <hr>
+
+        <form method="post" action="{% url 'edit_profile' %}">
+            {% csrf_token %}
+            {% if password_form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ password_form.non_field_errors }}
+                </div>
+            {% endif %}
+            {% for field in password_form %}
+                <div class="form-group{% if field.errors %} has-error{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <span class="help-block text-danger">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <button type="submit" name="change_password" class="btn btn-secondary">Change Password</button>
+        </form>
+    </div>
+{% endblock %}

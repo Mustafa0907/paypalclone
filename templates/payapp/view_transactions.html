@@ -1,0 +1,145 @@
+{#{% extends "base.html" %}#}
+{##}
+{#{% load static %}  <!-- Load static to include CSS or JS files -->#}
+{#<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">#}
+{##}
+{#{% block content %}#}
+{#    <div class="container mt-5">#}
+{#        <h2 class="mb-4">My Transactions</h2>#}
+{##}
+{#        <div class="card mb-4">#}
+{#            <div class="card-header">#}
+{#                <h3><i class="fas fa-paper-plane"></i> Sent Transactions</h3>#}
+{#            </div>#}
+{#            <div class="card-body">#}
+{#                <ul class="list-group list-group-flush">#}
+{#                    {% for transaction in sent_transactions %}#}
+{#                        <li class="list-group-item">#}
+{#                            <strong>{{ transaction.created_at }}:</strong>#}
+{#                            Sent {{ transaction.amount }} {{ transaction.currency }}#}
+{#                            to <em>{{ transaction.recipient.get_full_name }}</em>#}
+{#                            <!-- Adjust the badge color based on the transaction status -->#}
+{#                            <span class="badge {% if transaction.status == 'PENDING' %}badge-primary#}
+{#                                     {% elif transaction.status == 'COMPLETED' %}badge-success#}
+{#                                     {% else %}badge-danger{% endif %}">{{ transaction.status }}</span>#}
+{#                        </li>#}
+{#                    {% endfor %}#}
+{#                </ul>#}
+{#            </div>#}
+{#        </div>#}
+{#        <div class="card">#}
+{#            <div class="card-header">#}
+{#                <h3><i class="fas fa-hand-holding-usd"></i> Received Transactions</h3>#}
+{#            </div>#}
+{#            <div class="card-body">#}
+{#                <ul class="list-group list-group-flush">#}
+{#                    {% for transaction in received_transactions %}#}
+{#                        <li class="list-group-item d-flex justify-content-between align-items-center">#}
+{#                            <div>#}
+{#                                <strong>{{ transaction.created_at }}:</strong>#}
+{#                                <em>{{ transaction.sender.get_full_name }}</em>#}
+{#                                Requested {{ transaction.amount }} {{ transaction.currency }} from you.#}
+{#                                <!-- Adjust the badge color based on the transaction status -->#}
+{#                                <span class="badge {% if transaction.status == 'PENDING' %}badge-primary#}
+{#                                     {% elif transaction.status == 'APPROVED' %}badge-success#}
+{#                                     {% elif transaction.status == 'REJECTED' %}badge-danger#}
+{#                                     {% endif %}">{{ transaction.status }}</span>#}
+{#                            </div>#}
+{#                            {% if transaction.status == "PENDING" %}#}
+{#                                <div>#}
+{#                                    <form action="{% url 'approve_transaction' transaction.id %}" method="post">#}
+{#                                        {% csrf_token %}#}
+{#                                        <button type="submit" class="btn btn-success btn-sm">Approve</button>#}
+{#                                    </form>#}
+{#                                    <form action="{% url 'reject_transaction' transaction.id %}" method="post">#}
+{#                                        {% csrf_token %}#}
+{#                                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>#}
+{#                                    </form>#}
+{#                                </div>#}
+{#                            {% endif %}#}
+{#                        </li>#}
+{#                    {% endfor %}#}
+{#                </ul>#}
+{#            </div>#}
+{#        </div>#}
+{##}
+{##}
+{#    </div>#}
+{#{% endblock %}#}
+
+{% extends "base.html" %}
+
+{% load static %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+{% block content %}
+    <div class="container mt-5">
+        <h2 class="mb-4">My Transactions</h2>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3><i class="fas fa-paper-plane"></i> Sent Transactions</h3>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for transaction in sent_transactions %}
+                        <li class="list-group-item">
+                            <strong>{{ transaction.created_at }}:</strong>
+                            <!-- Determine the transaction type and display accordingly -->
+                            {% if transaction.transaction_type == 'REQUEST' %}
+                                Requested {{ transaction.amount }} {{ transaction.currency }} from <em>{{ transaction.recipient.get_full_name }}</em>
+                            {% elif transaction.transaction_type == 'SEND' %}
+                                Sent {{ transaction.amount }} {{ transaction.currency }} to <em>{{ transaction.recipient.get_full_name }}</em>
+                            {% endif %}
+                            <!-- Status badge for Sent Transactions -->
+                            <span class="badge {% if transaction.status == 'PENDING' %}badge-primary
+                             {% elif transaction.status == 'COMPLETED' or transaction.status == 'APPROVED' %}badge-success
+                             {% elif transaction.status == 'REJECTED' %}badge-danger
+                             {% endif %}">{{ transaction.status }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-hand-holding-usd"></i> Received Transactions</h3>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for transaction in received_transactions %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="w-100 text-center">
+                                <strong>{{ transaction.created_at }}:</strong>
+                                {% if transaction.transaction_type == 'REQUEST' %}
+                                    <em>{{ transaction.sender.get_full_name }}</em>
+                                    Requested {{ transaction.amount }} {{ transaction.currency }} from you.
+                                {% elif transaction.transaction_type == 'SEND' %}
+                                    You received {{ transaction.amount }} {{ transaction.currency }} from <em>{{ transaction.sender.get_full_name }}</em>.
+                                {% endif %}
+                                <span class="badge {% if transaction.status == 'PENDING' %}badge-primary
+                                         {% elif transaction.status == 'APPROVED' %}badge-success
+                                         {% elif transaction.status == 'COMPLETED' %}badge-success
+                                         {% elif transaction.status == 'REJECTED' %}badge-danger
+                                         {% endif %}">{{ transaction.status }}</span>
+                            </div>
+                            {% if transaction.status == "PENDING" %}
+                                <div>
+                                    <form action="{% url 'approve_transaction' transaction.id %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                    </form>
+                                    <form action="{% url 'reject_transaction' transaction.id %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

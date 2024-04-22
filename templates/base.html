@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Payment Service</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Custom CSS -->
+    <style>
+        body {
+            padding-top: 5rem;
+        }
+        .starter-template {
+            padding: 3rem 1.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href="#">Online Payment Service</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav mr-auto">
+            {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'send_payment' %}">Send Payment</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'request_payment' %}">Request Payment</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'view_transactions' %}">My Transactions</a>
+                </li>
+            {% endif %}
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" id="balanceDisplay">Balance: Loading...</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Notifications <span class="badge badge-light">!</span>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="notificationDropdown" style="right: 0; left: auto;">
+                        <!-- Dynamic content will be loaded here -->
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {{ user.username }} <span class="caret"></span>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+{#                        <a class="dropdown-item" href="{% url 'profile' %}">Profile</a>#}
+                        <a class="dropdown-item" href="{% url 'edit_profile' %}">Profile</a>
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item">Logout</button>
+                        </form>
+                    </div>
+                </li>
+                
+            {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'register' %}">Register</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+
+
+
+
+<main role="main" class="container starter-template">
+    {% block content %}
+        <!-- The child template content will be rendered here -->
+    {% endblock %}
+</main>
+
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        const dropdownElement = document.getElementById('notificationDropdown');
+        console.log("Dropdown Element:", dropdownElement);  // Check if the dropdown is found
+
+        const notificationsMenu = dropdownElement ? dropdownElement.nextElementSibling : null;
+        console.log("Notifications Menu:", notificationsMenu);  // Check if the menu is found
+
+        if (!notificationsMenu) {
+            console.error("The notifications menu element was not found.");
+            return;  // Exit if no notifications menu is found
+        }
+
+        function fetchNotifications() {
+            fetch('{% url "fetch_notifications" %}')
+                .then(response => response.json())
+                .then(data => {
+                    updateNotificationsDropdown(data.notifications);
+                })
+                .catch(error => console.error('Error fetching notifications:', error));
+        }
+
+        function updateNotificationsDropdown(notifications) {
+            notificationsMenu.innerHTML = ''; // Clear current notifications
+            if (notifications.length > 0) {
+                notifications.forEach(notification => {
+                    const typeMessage = notification.transaction_type === 'REQUEST' ? 'requested' : 'sent';
+                    const message = `${notification.sender} ${typeMessage} ${notification.amount} ${notification.currency}`;
+                    const notificationItem = document.createElement('a');
+                    notificationItem.className = 'dropdown-item';
+                    notificationItem.href = "#";
+                    notificationItem.textContent = message;
+                    notificationsMenu.appendChild(notificationItem);
+                });
+            } else {
+                notificationsMenu.innerHTML = '<a class="dropdown-item" href="#">No new notifications</a>';
+            }
+        }
+
+        fetchNotifications();
+        {#setInterval(fetchNotifications, 30000);#}
+    });
+</script>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        function fetchBalance() {
+            $.ajax({
+                url: "{% url 'fetch_balance' %}",
+                type: "GET",
+                success: function(data) {
+                    $('#balanceDisplay').text(`Balance: ${data.user_balance} ${data.user_currency}`);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching balance:", xhr.responseText);
+                }
+            });
+        }
+
+        fetchBalance(); // Fetch on load
+        {#setInterval(fetchBalance, 30000); // Refresh balance every 30 seconds#}
+    });
+</script>
+
+</body>
+
+</html>
+

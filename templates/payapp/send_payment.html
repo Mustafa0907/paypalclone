@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="card shadow p-3 mb-5 bg-white rounded">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">Send Payment</h3>
+                <form id="payment-form" method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="form-group text-right mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-credit-card"></i> Pay Now
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // Replace baseURL with the actual URL to your conversion service
+        const baseURL = 'http://127.0.0.1:8000/conversion';
+
+        // Elements
+        const senderCurrency = '{{ sender_currency }}';
+        const recipientAmountInput = document.getElementById('id_recipient_amount');
+        const senderAmountInput = document.getElementById('id_amount');
+        const currencySelect = document.getElementById('id_currency');
+
+        recipientAmountInput.addEventListener('input', function() {
+            const recipientAmount = recipientAmountInput.value;
+            const transactionCurrency = currencySelect.value;
+
+            // Call the conversion API only if recipientAmount is not empty
+            if (recipientAmount) {
+                const conversionUrl = `${baseURL}/${transactionCurrency}/${senderCurrency}/${recipientAmount}`;
+                console.log('sender' + senderCurrency);
+                fetch(conversionUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.converted_amount) {
+                            senderAmountInput.value = data.converted_amount.toFixed(2);
+                        } else {
+                            alert("Failed to convert currency.");
+                        }
+                    })
+                    .catch(error => console.error('Error fetching conversion rate:', error));
+            } else {
+                senderAmountInput.value = '0.00';
+            }
+        });
+
+        currencySelect.addEventListener('change', () => recipientAmountInput.dispatchEvent(new Event('input')));
+    </script>
+{% endblock %}

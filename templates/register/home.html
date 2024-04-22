@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% load static %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center">Welcome to Your Payment Dashboard</h1>
+
+        <!-- Dashboard Overview -->
+        <div class="row text-center justify-content-center">
+            <div class="col-md-3 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="fas fa-paper-plane fa-3x mb-3"></i>
+                        <h5 class="card-title">Send Payment</h5>
+                        <p class="card-text">Quickly send money to another user.</p>
+                        <a href="{% url 'send_payment' %}" class="btn btn-primary">Send Payment</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="fas fa-hand-holding-usd fa-3x mb-3"></i>
+                        <h5 class="card-title">Request Payment</h5>
+                        <p class="card-text">Request money from other users.</p>
+                        <a href="{% url 'request_payment' %}" class="btn btn-primary">Request Payment</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="fas fa-list-ul fa-3x mb-3"></i>
+                        <h5 class="card-title">View Transactions</h5>
+                        <p class="card-text">Review all your past transactions.</p>
+                        <a href="{% url 'view_transactions' %}" class="btn btn-primary">View Transactions</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
